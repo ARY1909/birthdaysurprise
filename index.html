@@ -1,0 +1,356 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>birthday surprise</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background:
+            radial-gradient(circle at center, #35182c, #120914 70%);
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        color: white;
+        overflow: hidden;
+    }
+
+    .container {
+        text-align: center;
+        width: min(92vw, 650px);
+    }
+
+    h1 {
+        margin: 0 0 8px;
+        font-size: clamp(28px, 6vw, 45px);
+        color: #ffd6e8;
+        text-shadow: 0 0 20px #ff4f91;
+    }
+
+    .subtitle {
+        margin-bottom: 22px;
+        color: #e8b8cc;
+        font-size: 15px;
+    }
+
+    .board {
+        width: min(90vw, 560px);
+        height: min(90vw, 560px);
+        margin: auto;
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        grid-template-rows: repeat(8, 1fr);
+        border: 8px solid #d9a6ba;
+        border-radius: 10px;
+        box-shadow:
+            0 0 30px rgba(255, 72, 137, .35),
+            0 20px 50px rgba(0,0,0,.6);
+        overflow: hidden;
+    }
+
+    .square {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .light {
+        background: #f4dce7;
+    }
+
+    .dark {
+        background: #713c58;
+    }
+
+    .piece {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        font-size: clamp(30px, 7vw, 54px);
+        transition: transform .2s, filter .2s;
+        line-height: 1;
+        user-select: none;
+    }
+
+    .piece:hover {
+        transform: scale(1.18);
+        filter: drop-shadow(0 0 10px #ff80b0);
+    }
+
+    .white-piece {
+        color: #fff;
+        text-shadow:
+            1px 1px 2px #555,
+            0 0 8px rgba(255,255,255,.8);
+    }
+
+    .black-piece {
+        color: #171018;
+        text-shadow: 0 0 6px rgba(255,255,255,.35);
+    }
+
+    /* نافذة الرسالة */
+    .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(8, 3, 8, .78);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 10;
+    }
+
+    .overlay.show {
+        display: flex;
+    }
+
+    .message-box {
+        width: min(90vw, 470px);
+        padding: 35px 25px;
+        border-radius: 25px;
+        background:
+            linear-gradient(145deg, #381326, #160a13);
+        border: 1px solid #ff78a9;
+        box-shadow:
+            0 0 40px rgba(255, 66, 135, .35);
+        animation: pop .3s ease;
+        position: relative;
+    }
+
+    @keyframes pop {
+        from {
+            transform: scale(.75);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .heart {
+        font-size: 45px;
+        margin-bottom: 15px;
+        animation: heartbeat 1s infinite;
+    }
+
+    @keyframes heartbeat {
+        50% { transform: scale(1.15); }
+    }
+
+    #message {
+        font-size: 22px;
+        line-height: 1.8;
+        color: #ffe3ee;
+        margin: 0 0 20px;
+    }
+
+    .close {
+        border: none;
+        padding: 10px 25px;
+        border-radius: 30px;
+        background: #e94d88;
+        color: white;
+        cursor: pointer;
+        font-size: 15px;
+    }
+
+    .close:hover {
+        background: #ff6ba1;
+    }
+
+    .hint {
+        margin-top: 18px;
+        color: #c999ad;
+        font-size: 13px;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1> it's just me </h1>
+    <div class="subtitle">
+        لكل قطعة حكاية صغيرة عن حبي لك ❤️
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <div class="hint">
+        اضغط اي قطعة لترى ما سيحدث
+    </div>
+
+</div>
+
+<!-- عيد ميلاد سعيد -->
+<div class="overlay" id="overlay">
+    <div class="message-box">
+        <div class="heart">❤️</div>
+        <p id="message"></p>
+        <button class="close" onclick="closeMessage()">إغلاق</button>
+    </div>
+</div>
+
+<script>
+
+const messages = [
+
+    "أحبك اكثر مما تتخيل",
+
+    "أول لعبة لعبناها كانت اول خطوة لك الى قلبي",
+
+    "لو خيرت بيني وبينك سأختارك دون تفكير",
+
+    "أنت الشخص الذي يجعل أيامي أجمل بمجرد وجوده.",
+
+    "قلبي اختارك من بين الجميع، وما زال يختارك كل يوم.",
+
+    "أحب تفاصيلك الصغيرة التي ربما لا تنتبه لها أنت.",
+
+    "معك حتى أبسط اللحظات تصبح ذكرى جميلة.",
+
+    "أنت لست مجرد شخص أحبه، أنت شخص أتمنى أن يبقى معي دائمًا.",
+
+    "عيد ميلاد سعيد للشخص الذي يحتل مكانًا خاصًا جدًا في قلبي. 🎂❤️",
+
+    "أتمنى أن تكون كل سنواتك القادمة مليئة بالسعادة التي تستحقها.",
+
+    "لو كان الحب لعبة شطرنج، فسأختار أن ألعب معك إلى الأبد.",
+
+    "أنت أجمل نقلة قام بها القدر في حياتي. ♟️❤️",
+
+    "لا أعرف كيف حدث ذلك، لكن قلبي وجد فيك مكانه.",
+
+    "أريد أن أكون بجانبك في أيامك الجميلة والصعبة وكل ما بينها.",
+
+    "كل سنة وأنت الشخص الذي يجعل قلبي يبتسم.",
+
+    "أحبك اليوم، وسأحبك في كل نسخة قادمة من حياتي.",
+
+    "حين أفكر في الأشياء الجميلة، يأتي اسمك أولًا.",
+
+    "أنت الشخص الذي أتمنى ألا تصبح علاقتي به مجرد ذكرى.",
+
+    "أريد المزيد من الضحكات، والمزيد من الذكريات، والمزيد من الأيام معك.",
+
+    "لو كان بإمكاني إعطاؤك شيئًا واحدًا، لأعطيتك القدرة على رؤية نفسك بعيني لتعرف كم أنت مميز.",
+
+    "وجودك يجعل العالم يبدو أقل قسوة وأكثر جمالًا.",
+
+    "أنت أحد الأسباب التي تجعلني أبتسم دون أن أشعر.",
+
+    "أحبك بطريقة هادئة، عميقة، وصادقة جدًا",
+
+    "كل قطعة على هذه الرقعة تخفي رسالة لكن الحقيقة أن أكبر رسالة هي: أنا أحبك",
+
+    "أتمنى أن تكون سنة ميلادك الجديدة بداية لكل شيء جميل تتمناه",
+
+    "لو عاد بي الزمن إلى البداية سأختارك مرة أخرى",
+
+    "احبك",
+
+    "أحب الطريقة التي تجعل بها وجودك في حياتي مختلفًا",
+
+    "مهما تغيرت الأيام أتمنى أن يبقى بيننا شيء لا يتغير",
+
+    "أريد أن أصنع معك ذكريات نستطيع أن نبتسم بسببها بعد سنوات",
+
+    "في هذه اللعبة هناك 32 قطعة، لكن قطعة واحدة فقط هي التي أخذت قلبي... أنت",
+
+    "عيد ميلاد سعيد يا أجمل شخص دخل حياتي أحبك أكثر مما تتخيل ❤️🎂"
+
+];
+
+const board = document.getElementById("board");
+const overlay = document.getElementById("overlay");
+const message = document.getElementById("message");
+
+/*
+    ترتيب قطع الشطرنج:
+    الصف الأول: رخ حصان فيل ملكة ملك فيل حصان رخ
+    الصف الثاني: 8 بيادق
+    الصفوف الوسطى فارغة
+    الصف السابع: 8 بيادق
+    الصف الثامن: رخ حصان فيل ملكة ملك فيل حصان رخ
+*/
+
+const pieces = {
+    0: ["♜","♞","♝","♛","♚","♝","♞","♜"],
+    1: ["♟","♟","♟","♟","♟","♟","♟","♟"],
+    6: ["♙","♙","♙","♙","♙","♙","♙","♙"],
+    7: ["♖","♘","♗","♕","♔","♗","♘","♖"]
+};
+
+let messageIndex = 0;
+
+for (let row = 0; row < 8; row++) {
+
+    for (let col = 0; col < 8; col++) {
+
+        const square = document.createElement("div");
+
+        square.className =
+            "square " +
+            ((row + col) % 2 === 0 ? "light" : "dark");
+
+        if (pieces[row] && pieces[row][col]) {
+
+            const piece = document.createElement("button");
+
+            piece.className =
+                "piece " +
+                (row < 2 ? "black-piece" : "white-piece");
+
+            piece.textContent = pieces[row][col];
+
+            piece.onclick = () => {
+
+                message.textContent =
+                    messages[messageIndex];
+
+                messageIndex++;
+
+                if (messageIndex >= messages.length) {
+                    messageIndex = 0;
+                }
+
+                overlay.classList.add("show");
+            };
+
+            square.appendChild(piece);
+        }
+
+        board.appendChild(square);
+    }
+}
+
+function closeMessage() {
+    overlay.classList.remove("show");
+}
+
+/* إغلاق الرسالة عند الضغط خارجها */
+overlay.addEventListener("click", function(e) {
+    if (e.target === overlay) {
+        closeMessage();
+    }
+});
+
+</script>
+
+</body>
+</html>
+
